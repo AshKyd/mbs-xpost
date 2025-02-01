@@ -10,6 +10,9 @@ const mastoToBsky = (() => {
   try {
     return JSON.parse(fs.readFileSync(mastoToBskyPath));
   } catch (e) {
+    try {
+      fs.mkdirSync(resolvePath("../logs"));
+    } catch (e) {}
     return {};
   }
 })();
