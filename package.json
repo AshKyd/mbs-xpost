@@ -1,0 +1,23 @@
+{
+  "name": "mbs-bridge",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "mocha test/*"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@atproto/api": "^0.13.21",
+    "dotenv": "^16.4.7",
+    "he": "^1.2.0",
+    "striptags": "^3.2.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "mocha": "^11.1.0"
+  }
+}
