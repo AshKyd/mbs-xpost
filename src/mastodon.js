@@ -23,10 +23,10 @@ export function getMastoStream(onMessage) {
     const message = JSON.parse(new TextDecoder("utf-8").decode(data));
     const event = message.event;
     const payload = message.payload ? JSON.parse(message.payload) : null;
-    // if (!["public", "unlisted"].includes(payload.visibility)) {
-    //   console.log("-");
-    //   return;
-    // }
+    if (!["public", "unlisted"].includes(payload.visibility)) {
+      console.log("-");
+      return;
+    }
 
     if (payload.mentions?.length) {
       // don't repost @replies
