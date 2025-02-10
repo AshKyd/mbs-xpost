@@ -14,6 +14,33 @@ async function getAgent() {
   return agent;
 }
 
+/** parse URLs and mark them up so BlueSky knows how to display them */
+function parseFacets(text) {
+  const spans = [];
+  // Partial/naive URL regex, adapted from: https://stackoverflow.com/a/3809435
+  // Tweaked to disallow some training punctuation
+  const urlRegex =
+    /(?:[^\w]|^)(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*[-a-zA-Z0-9@%_\+~#//=])?)/g;
+  let match;
+
+  while ((match = urlRegex.exec(text)) !== null) {
+    spans.push({
+      index: {
+        byteStart: match.index + 1, // match.index gives the position of the full match; +1 for the start of the URL,
+        byteEnd: match.index + match[0].length, // end position of the matched URL
+      },
+      features: [
+        {
+          $type: "app.bsky.richtext.facet#link",
+          uri: match[1], // the matched URL itself
+        },
+      ],
+    });
+  }
+
+  return spans;
+}
+
 export async function post(text, attachments) {
   const agent = await getAgent();
 
@@ -79,11 +106,19 @@ export async function post(text, attachments) {
   let firstRes;
   let lastRes;
   for (let thisPost of posts) {
+    if (!thisPost) {
+      continue;
+    }
     // If this a multi-part post, add reply metadata
     const postBody = {
       langs: ["en"],
       text: thisPost,
     };
+
+    const facets = parseFacets(thisPost);
+    if (facets.length) {
+      postBody.facets = facets;
+    }
 
     if (!firstRes) {
       postBody.embed = embed;

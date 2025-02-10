@@ -25,6 +25,9 @@ function setMastoToBsky(masto, bsky) {
 getMastoStream(async (event, payload) => {
   if (event === "update") {
     const text = he.decode(striptags(payload.content));
+    if (!text) {
+      return;
+    }
     const attachments = payload.media_attachments.map((attachment) => ({
       url: attachment.url,
       description: attachment.description,
