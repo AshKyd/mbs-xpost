@@ -6,6 +6,7 @@ export function getMastoStream(onMessage) {
   console.log("connecting to ", process.env.MASTODON_SERVER);
 
   let ws;
+  let closer;
   function connect() {
     ws = new WebSocket(
       `wss://${process.env.MASTODON_SERVER}/api/v1/streaming`,
@@ -19,6 +20,11 @@ export function getMastoStream(onMessage) {
     ws.on("open", () => {
       console.log("Connected to WebSocket server");
       ws.send(JSON.stringify({ type: "subscribe", stream: "user" }));
+      closer = setTimeout(() => {
+        console.log("Reconnecting Websocket…");
+        closer = undefined;
+        ws.close();
+      }, 1000 * 60 * 60);
     });
 
     ws.on("message", (data) => {
@@ -57,6 +63,9 @@ export function getMastoStream(onMessage) {
 
     ws.on("close", function close() {
       console.log("Websocket disconnected.");
+      if (closer) {
+        clearTimeout(closer);
+      }
       connect();
     });
   }
