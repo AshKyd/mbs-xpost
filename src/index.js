@@ -24,7 +24,9 @@ function setMastoToBsky(masto, bsky) {
 
 getMastoStream(async (event, payload) => {
   if (event === "update") {
-    const text = he.decode(striptags(payload.content));
+    const text = trim(
+      he.decode(striptags(payload.content.replace(/<p>/g, "\n<p>")))
+    );
     if (!text) {
       return;
     }

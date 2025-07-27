@@ -52,11 +52,9 @@ Nice day for it.`,
   });
   it("should handle newlines ok", () => {
     const post = [
-      "I should go for a ride before it starts raining.",
-      "*plays computer games until the rain comes*",
-      "Ah.",
+      "I should go for a ride before it starts raining.\n*plays computer games until the rain comes*\nAh.",
     ];
-    const res = splitPost(post.join("\n"), { maxLength: 300 });
-    assert.deepEqual(res, [post.join("\n")]);
+    const res = splitPost(post[0], { maxLength: 300 });
+    assert.deepEqual(res, post);
   });
 });
