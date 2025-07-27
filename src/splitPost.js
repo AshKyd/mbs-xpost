@@ -1,3 +1,4 @@
+import tokenizer from "sbd";
 function combineEntries(posts, joinChar, maxLength) {
   return posts
     .reduce(
@@ -34,8 +35,8 @@ export function splitPost(post, { maxLength = 300 }) {
   }
 
   const postsByParBySentence = postsByPar.flatMap((post) => {
-    const sentences = post.match(/[^\.!\?]+[\.!\?]+/g) || [post];
-    return combineEntries(sentences, "", maxLength);
+    const sentences = tokenizer.sentences(post);
+    return combineEntries(sentences, " ", maxLength);
   });
 
   if (postsByParBySentence.every(arePostsUnderLimit)) {

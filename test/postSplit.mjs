@@ -1,4 +1,4 @@
-import { splitPost } from "../src/postsplit.js";
+import { splitPost } from "../src/splitPost.js";
 import assert from "node:assert";
 
 describe("postSplit", () => {
@@ -41,5 +41,22 @@ Nice day for it.`,
     ];
     const res = splitPost(post.join(" "), { maxLength: 80 });
     assert.deepEqual(res, post);
+  });
+  it("should handle hyperlinks ok", () => {
+    const post = [
+      "“Neuron Mobility announced it had merged its Australian operations with Beam, and expected to return 700 purple – albeit rebranded and refurbished – e-scooters to #Brisbane streets.”",
+      "https://www.brisbanetimes.com.au/national/queensland/paint-it-purple-ousted-e-scooter-company-returns-to-brisbane-in-merger-20250721-p5mgnv.html",
+    ];
+    const res = splitPost(post.join(" "), { maxLength: 300 });
+    assert.deepEqual(res, post);
+  });
+  it("should handle newlines ok", () => {
+    const post = [
+      "I should go for a ride before it starts raining.",
+      "*plays computer games until the rain comes*",
+      "Ah.",
+    ];
+    const res = splitPost(post.join("\n"), { maxLength: 300 });
+    assert.deepEqual(res, [post.join("\n")]);
   });
 });
