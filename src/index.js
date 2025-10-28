@@ -9,6 +9,18 @@ if (typeof URL === "undefined") {
   throw new Error("URL is undefined, this version of Node is too old.");
 }
 
+[
+  "MASTODON_SERVER",
+  "MASTODON_USER",
+  "MASTODON_TOKEN",
+  "BLUESKY_USERNAME",
+  "BLUESKY_PASSWORD",
+].forEach((varName) => {
+  if (!process.env[varName]) {
+    throw new Error(`process.env.${varName} must be defined`);
+  }
+});
+
 const mastoToBskyPath = resolvePath("../logs/mastoToBsky.json");
 const mastoToBsky = (() => {
   try {
