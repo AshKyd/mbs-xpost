@@ -13,6 +13,7 @@
   "dependencies": {
     "@atproto/api": "^0.13.21",
     "dotenv": "^16.4.7",
+    "fetch-opengraph": "^1.0.36",
     "he": "^1.2.0",
     "sbd": "^1.0.19",
     "striptags": "^3.2.0",

@@ -1,4 +1,5 @@
 import { AtpAgent, RichText } from "@atproto/api";
+import fetchOpengraph from "fetch-opengraph";
 import * as process from "process";
 import { splitPost } from "./splitPost.js";
 
@@ -14,44 +15,69 @@ export async function getAgent() {
   return agent;
 }
 
-/** parse URLs and mark them up so BlueSky knows how to display them */
-function parseFacets(text) {
-  const spans = [];
-  // Partial/naive URL regex, adapted from: https://stackoverflow.com/a/3809435
-  // Tweaked to disallow some training punctuation
-  const urlRegex =
-    /(?:[^\w]|^)(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*[-a-zA-Z0-9@%_\+~#//=])?)/g;
-  let match;
-
-  while ((match = urlRegex.exec(text)) !== null) {
-    spans.push({
-      index: {
-        byteStart: match.index + 1, // match.index gives the position of the full match; +1 for the start of the URL,
-        byteEnd: match.index + match[0].length, // end position of the matched URL
-      },
-      features: [
-        {
-          $type: "app.bsky.richtext.facet#link",
-          uri: match[1], // the matched URL itself
-        },
-      ],
-    });
-  }
-
-  return spans;
-}
-
-export async function getPostBody(agent, thisPost) {
+export async function getPostBody(agent, thisPost = "", getImages = false) {
   const rt = new RichText({
     text: thisPost,
   });
   await rt.detectFacets(agent);
 
+  const facets = rt.facets;
+
+  const mainLink = facets.find(
+    (facet) => facet.features[0].$type === "app.bsky.richtext.facet#link"
+  );
+
+  let embed;
+  if (mainLink && getImages) {
+    const { uri } = mainLink.features[0];
+    const {
+      "og:image": imageUrl,
+      "og:title": title,
+      "og:description": description = "",
+    } = await fetchOpengraph.fetch(uri);
+
+    if (title) {
+      let imageDef;
+      if (imageUrl) {
+        // resolve potentially relative urls against the source uri
+        const resolvedImage = URL.parse(imageUrl, uri).href;
+        const res = await uploadAttachment(agent, resolvedImage);
+        imageDef = res.data.blob;
+      }
+      embed = {
+        $type: "app.bsky.embed.external",
+        external: {
+          uri,
+          title: title,
+          description: description,
+          thumb: imageDef,
+        },
+      };
+    }
+    console.log("creating embed", embed);
+  }
+
   return {
     langs: ["en"],
     text: rt.text,
-    facets: rt.facets,
+    facets: facets,
+    embed,
   };
+}
+
+/**
+ * Uploads an attachment from a URL to Bluesky
+ * @param {import("@atproto/api").AtpAgent} agent - The Bluesky API agent
+ * @param {string} url - The URL of the attachment to upload
+ * @returns {Promise<{data: any, type: string}>} The uploaded blob data and its type
+ */
+async function uploadAttachment(agent, url) {
+  const type = url.match(/\.([^.]*$)/)?.[1];
+  const res = await fetch(url);
+
+  console.log("uploading attachment: ", { type, url });
+  const upload = await agent.uploadBlob(res.body);
+  return { data: upload.data, type };
 }
 
 export async function post(text, attachments) {
@@ -59,15 +85,10 @@ export async function post(text, attachments) {
 
   const uploadedAttachments = await Promise.all(
     attachments.map(async (attachment) => {
-      const type = attachment.url.match(/\.([^.]*$)/)?.[1];
-      const res = await fetch(attachment.url);
-      console.log(
-        "uploading image",
-        (attachment.description && attachment.description.slice(0, 30)) ||
-          attachment.url
-      );
-      const { data } = await agent.uploadBlob(res.body);
-      return { ...attachment, data, type };
+      return {
+        ...attachment,
+        ...(await uploadAttachment(agent, attachment.url)),
+      };
     })
   ).catch((e) => {
     console.error("Error uploading media", e.message);
@@ -122,9 +143,9 @@ export async function post(text, attachments) {
     if (!thisPost) {
       continue;
     }
-    const postBody = await getPostBody(agent, thisPost);
+    const postBody = await getPostBody(agent, thisPost, !embed);
 
-    if (!firstRes) {
+    if (!firstRes && embed) {
       postBody.embed = embed;
     }
 
