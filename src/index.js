@@ -5,6 +5,10 @@ import striptags from "striptags";
 import he from "he";
 import { resolvePath } from "./files.js";
 
+if (typeof URL === "undefined") {
+  throw new Error("URL is undefined, this version of Node is too old.");
+}
+
 const mastoToBskyPath = resolvePath("../logs/mastoToBsky.json");
 const mastoToBsky = (() => {
   try {
