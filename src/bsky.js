@@ -23,7 +23,7 @@ export async function getPostBody(agent, thisPost = "", getImages = false) {
 
   const facets = rt.facets;
 
-  const mainLink = facets.find(
+  const mainLink = facets?.find(
     (facet) => facet.features[0].$type === "app.bsky.richtext.facet#link"
   );
 
