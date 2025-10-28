@@ -1,8 +1,8 @@
-import { AtpAgent } from "@atproto/api";
+import { AtpAgent, RichText } from "@atproto/api";
 import * as process from "process";
 import { splitPost } from "./splitPost.js";
 
-async function getAgent() {
+export async function getAgent() {
   const agent = new AtpAgent({
     service: "https://bsky.social",
   });
@@ -39,6 +39,19 @@ function parseFacets(text) {
   }
 
   return spans;
+}
+
+export async function getPostBody(agent, thisPost) {
+  const rt = new RichText({
+    text: thisPost,
+  });
+  await rt.detectFacets(agent);
+
+  return {
+    langs: ["en"],
+    text: rt.text,
+    facets: rt.facets,
+  };
 }
 
 export async function post(text, attachments) {
@@ -109,16 +122,7 @@ export async function post(text, attachments) {
     if (!thisPost) {
       continue;
     }
-    // If this a multi-part post, add reply metadata
-    const postBody = {
-      langs: ["en"],
-      text: thisPost,
-    };
-
-    const facets = parseFacets(thisPost);
-    if (facets.length) {
-      postBody.facets = facets;
-    }
+    const postBody = await getPostBody(agent, thisPost);
 
     if (!firstRes) {
       postBody.embed = embed;

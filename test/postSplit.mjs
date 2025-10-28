@@ -1,3 +1,5 @@
+import { AtpAgent } from "@atproto/api";
+import { getPostBody } from "../src/bsky.js";
 import { splitPost } from "../src/splitPost.js";
 import assert from "node:assert";
 
@@ -56,5 +58,35 @@ Nice day for it.`,
     ];
     const res = splitPost(post[0], { maxLength: 300 });
     assert.deepEqual(res, post);
+  });
+});
+
+describe("getPostBody", () => {
+  it("should detect links", async () => {
+    const agent = new AtpAgent({
+      service: "https://bsky.social",
+    });
+    const thing = await getPostBody(
+      agent,
+      "Hi this is my post https://ashk.au/"
+    );
+    assert.deepEqual(thing, {
+      langs: ["en"],
+      text: "Hi this is my post https://ashk.au/",
+      facets: [
+        {
+          index: {
+            byteStart: 19,
+            byteEnd: 35,
+          },
+          features: [
+            {
+              $type: "app.bsky.richtext.facet#link",
+              uri: "https://ashk.au/",
+            },
+          ],
+        },
+      ],
+    });
   });
 });
