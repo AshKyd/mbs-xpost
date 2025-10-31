@@ -31,23 +31,20 @@ export function getMastoStream(onMessage) {
       const message = JSON.parse(new TextDecoder("utf-8").decode(data));
       const event = message.event;
       const payload = message.payload ? JSON.parse(message.payload) : null;
-      // if (!["public", "unlisted"].includes(payload.visibility)) {
-      //   console.log("-");
-      //   return;
-      // }
-
-      if (payload.mentions?.length) {
-        // don't repost @replies
-        return;
-      }
       if (
         payload?.account?.url &&
         payload?.account?.url !== process.env.MASTODON_USER
       ) {
-        console.log(
-          "payload contains a mention",
-          JSON.stringify(payload.content)
-        );
+        return;
+      }
+      console.log("received message", message.payload.content);
+      if (!["public", "unlisted"].includes(payload.visibility)) {
+        console.log("-");
+        return;
+      }
+
+      if (payload.mentions?.length) {
+        // don't repost @replies
         return;
       }
 
