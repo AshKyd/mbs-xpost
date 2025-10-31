@@ -59,6 +59,20 @@ Nice day for it.`,
     const res = splitPost(post[0], { maxLength: 300 });
     assert.deepEqual(res, post);
   });
+  it("should handle double newlines ok", () => {
+    const post = [
+      "I should go for a ride before it starts raining.\n*plays computer games until the rain comes*\n\nAh.",
+    ];
+    const res = splitPost(post[0], { maxLength: 300 });
+    assert.deepEqual(res, post);
+  });
+  it("should remove HT text, since it's only applicable to Mastodon", () => {
+    const res = splitPost(
+      "I should go for a ride before it starts raining. HT @ash@bne.social",
+      { maxLength: 300 }
+    );
+    assert.deepEqual(res, ["I should go for a ride before it starts raining."]);
+  });
 });
 
 describe("getPostBody", () => {
@@ -71,22 +85,23 @@ describe("getPostBody", () => {
       "Hi this is my post https://ashk.au/"
     );
     assert.deepEqual(thing, {
-      langs: ["en"],
-      text: "Hi this is my post https://ashk.au/",
+      embed: undefined,
       facets: [
         {
-          index: {
-            byteStart: 19,
-            byteEnd: 35,
-          },
           features: [
             {
               $type: "app.bsky.richtext.facet#link",
               uri: "https://ashk.au/",
             },
           ],
+          index: {
+            byteEnd: 35,
+            byteStart: 19,
+          },
         },
       ],
+      langs: ["en"],
+      text: "Hi this is my post https://ashk.au/",
     });
   });
 });

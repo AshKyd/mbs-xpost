@@ -21,7 +21,8 @@ function combineEntries(posts, joinChar, maxLength) {
     .map((post) => post.trim());
 }
 
-export function splitPost(post, { maxLength = 300 }) {
+export function splitPost(_post, { maxLength = 300 }) {
+  const post = _post.trim().split(" HT ")[0];
   if (post.length <= maxLength) {
     return [post];
   }
