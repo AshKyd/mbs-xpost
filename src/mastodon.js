@@ -37,13 +37,15 @@ export function getMastoStream(onMessage) {
       ) {
         return;
       }
-      console.log("received message", message.payload.content);
       if (!["public", "unlisted"].includes(payload.visibility)) {
         console.log("-");
         return;
       }
 
-      if (payload.mentions?.length) {
+      // Remove everythigng after the HT
+      payload.content = payload.content.splic(" HT ")[0];
+
+      if (payload.content.includes('class="u-url mention"')) {
         // don't repost @replies
         return;
       }
