@@ -44,6 +44,10 @@ export function getMastoStream(onMessage) {
         payload?.account?.url &&
         payload?.account?.url !== process.env.MASTODON_USER
       ) {
+        console.log(
+          "payload contains a mention",
+          JSON.stringify(payload.content)
+        );
         return;
       }
 
