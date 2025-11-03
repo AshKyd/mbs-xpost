@@ -106,7 +106,7 @@ export async function post(text, attachments) {
     (attachment) => attachment.type !== "mp4"
   );
 
-  const posts = splitPost(sanitisedText, { maxLength: 300 });
+  const posts = splitPost(text, { maxLength: 300 });
 
   let embed = undefined;
   if (images.length && videos.length) {

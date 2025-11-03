@@ -31,6 +31,7 @@ export function getMastoStream(onMessage) {
       const message = JSON.parse(new TextDecoder("utf-8").decode(data));
       const event = message.event;
       const payload = message.payload ? JSON.parse(message.payload) : null;
+
       if (
         payload?.account?.url &&
         payload?.account?.url !== process.env.MASTODON_USER
@@ -38,16 +39,17 @@ export function getMastoStream(onMessage) {
         return;
       }
       if (!["public", "unlisted"].includes(payload.visibility)) {
-        console.log("-");
         return;
       }
 
       // Remove everythigng after the HT
-      payload.content = payload.content.splic(" HT ")[0];
+      if (payload?.content) {
+        payload.content = payload.content.replace(/ HT.*<\/p>/, "</p>");
 
-      if (payload.content.includes('class="u-url mention"')) {
-        // don't repost @replies
-        return;
+        if (payload.content?.includes('class="u-url mention"')) {
+          // don't repost @replies
+          return;
+        }
       }
 
       onMessage(event, payload);
